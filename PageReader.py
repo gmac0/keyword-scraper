@@ -1,5 +1,6 @@
 from lxml import html
 import requests
+import operator
 
 class PageReader:
 
@@ -28,10 +29,64 @@ class PageReader:
         for key, xpathString in pathsDict.items():
             if not key in results:
                 results[key] = []
-            results[key].append(tree.xpath(xpathString + '/text()'))
+            xpathResults = tree.xpath(xpathString + '/text()')
+            results[key] = results[key] + xpathResults
         return results
+
+    def analyzeResults(self, results):
+        for key, data in results.items():
+            func = 'analyze' + key.title()
+            try:
+                getattr(self, func)(data)
+            except AttributeError:
+                print('Expected function ' + func + ' does not exist')
+
+    def analyzeCompany(self, data):
+        companyCounts = {}
+        for company in data:
+            if not company in companyCounts:
+                companyCounts[company] = 0
+            companyCounts[company] += 1
+        companyCountsSorted = sorted(
+            companyCounts.items(),
+            key=operator.itemgetter(1),
+            reverse=True
+        )
+        for company, count in companyCountsSorted:
+            print(str(count) + ' ' + company)
+
+    def analyzeTitle(self, data):
+        targets = [
+            'php',
+            'typescript',
+            'javascript',
+            'angular',
+            'ruby',
+            'java ',
+            'rails',
+            'node',
+            'go',
+            'python',
+            'react'
+        ];
+        targetCounts = {};
+        for target in targets:
+            targetCounts[target] = 0
+        for title in data:
+            for target in targets:
+                if (title.lower().find(target) != -1):
+                    targetCounts[target] += 1
+        targetCountsSorted = sorted(
+            targetCounts.items(),
+            key=operator.itemgetter(1),
+            reverse=True
+        )
+        for target, count in targetCountsSorted:
+            print(str(count) + ' ' + target)
+
 
 pageReader = PageReader()
 content = pageReader.getPage()
 results = pageReader.getXPathResults(content)
-print(results)
+analyzed = pageReader.analyzeResults(results)
+# print(results)
