@@ -1,0 +1,32 @@
+{
+	"host": "weworkremotely.com",
+	"schema": "https",
+	"path": "categories/2-programming/jobs#intro",
+	"links_xpath": "//*[@id='category-2']/article/ul/li[*]/a",
+	"targets": {
+		"company": {
+			"xpath": "//*[@id='category-2']/article/ul/li[*]/a/span[1]",
+			"type": "full_text"
+		},
+		"title": {
+			"xpath": "//*[@id='category-2']/article/ul/li[*]/a/span[2]",
+			"type": "words",
+			"whitelist": [
+				"php",
+				"typescript",
+				"javascript",
+				"angular",
+				"ruby",
+				"java ",
+				"rails",
+				"node",
+				"go",
+				"python",
+				"react",
+				"c",
+				"c++",
+				"c#"
+			]
+		}
+	}
+}
