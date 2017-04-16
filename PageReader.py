@@ -1,6 +1,7 @@
 from lxml import html
 import requests
 import operator
+import re
 
 class PageReader:
 
@@ -10,9 +11,31 @@ class PageReader:
         'host': 'weworkremotely.com',
         'schema': 'https',
         'path': 'categories/2-programming/jobs#intro',
-        'xpath': {
-            'company': '//*[@id="category-2"]/article/ul/li[*]/a/span[1]',
-            'title': '//*[@id="category-2"]/article/ul/li[*]/a/span[2]'
+        'targets': {
+            'company': {
+                'xpath': '//*[@id="category-2"]/article/ul/li[*]/a/span[1]',
+                'type': 'fullText'
+            },
+            'title': {
+                'xpath': '//*[@id="category-2"]/article/ul/li[*]/a/span[2]',
+                'type': 'words',
+                'whitelist': [
+                    'php',
+                    'typescript',
+                    'javascript',
+                    'angular',
+                    'ruby',
+                    'java ',
+                    'rails',
+                    'node',
+                    'go',
+                    'python',
+                    'react',
+                    'c',
+                    'c++',
+                    'c#'
+                ]
+            }
         }
     }
 
@@ -33,60 +56,76 @@ class PageReader:
             results[key] = results[key] + xpathResults
         return results
 
+    def getXPathResults(self, pageContent):
+        tree = html.fromstring(pageContent);
+        results = {}
+        for key, targetData in self.config['targets'].items():
+            if not key in results:
+                results[key] = []
+            xpathResults = tree.xpath(targetData['xpath'] + '/text()')
+            results[key] = results[key] + xpathResults
+        return results
+
     def analyzeResults(self, results):
         for key, data in results.items():
-            func = 'analyze' + key.title()
+            func = self.getAnalyzeStrategy(key)
             try:
-                getattr(self, func)(data)
+                getattr(self, func)(data, key)
             except AttributeError:
                 print('Expected function ' + func + ' does not exist')
 
-    def analyzeCompany(self, data):
-        companyCounts = {}
-        for company in data:
-            if not company in companyCounts:
-                companyCounts[company] = 0
-            companyCounts[company] += 1
-        companyCountsSorted = sorted(
-            companyCounts.items(),
+    def analyzeFullText(self, data, key):
+        counts = {}
+        for text in data:
+            counts = self.addPhraseCount(counts, text)
+        countsSorted = sorted(
+            counts.items(),
             key=operator.itemgetter(1),
             reverse=True
         )
-        for company, count in companyCountsSorted:
-            print(str(count) + ' ' + company)
+        for text, count in countsSorted:
+            print(str(count) + ' ' + text)
 
-    def analyzeTitle(self, data):
-        targets = [
-            'php',
-            'typescript',
-            'javascript',
-            'angular',
-            'ruby',
-            'java ',
-            'rails',
-            'node',
-            'go',
-            'python',
-            'react'
-        ];
-        targetCounts = {};
-        for target in targets:
-            targetCounts[target] = 0
-        for title in data:
-            for target in targets:
-                if (title.lower().find(target) != -1):
-                    targetCounts[target] += 1
-        targetCountsSorted = sorted(
-            targetCounts.items(),
+    def analyzeWords(self, data, key):
+        counts = {};
+        useWhitelist = self.hasWhitelist(key)
+        if (useWhitelist):
+            whitelist = self.config['targets'][key]['whitelist']
+        for text in data:
+            words = text.split()
+            for word in words:
+                word = re.sub(r"[^a-z\+#]", "", word.lower())
+                if (useWhitelist):
+                    try:
+                        whitelist.index(word)
+                        counts = self.addPhraseCount(counts, word)
+                    except ValueError:
+                        pass
+                else:
+                    counts = self.addPhraseCount(counts, word)
+        countsSorted = sorted(
+            counts.items(),
             key=operator.itemgetter(1),
             reverse=True
         )
-        for target, count in targetCountsSorted:
+        for target, count in countsSorted:
             print(str(count) + ' ' + target)
 
+    def addPhraseCount(self, counts, word):
+        if not word in counts:
+            counts[word] = 0
+        counts[word] += 1
+        return counts
+
+    def hasWhitelist(self, key):
+        return not self.config['targets'][key]['whitelist'] is None
+
+    def getAnalyzeStrategy(self, targetKey):
+        analyzeType = self.config['targets'][targetKey]['type']
+        analyzeType = analyzeType[0].upper() + analyzeType[1:]
+        return 'analyze' + analyzeType
 
 pageReader = PageReader()
 content = pageReader.getPage()
 results = pageReader.getXPathResults(content)
 analyzed = pageReader.analyzeResults(results)
-# print(results)
