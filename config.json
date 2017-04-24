@@ -1,32 +1,50 @@
 {
 	"host": "weworkremotely.com",
 	"schema": "https",
-	"path": "categories/2-programming/jobs#intro",
-	"links_xpath": "//*[@id='category-2']/article/ul/li[*]/a",
-	"targets": {
-		"company": {
-			"xpath": "//*[@id='category-2']/article/ul/li[*]/a/span[1]",
-			"type": "full_text"
+	"pages": {
+		"programming": {
+			"path": {
+				"type": "url",
+				"value": "categories/2-programming/jobs#intro"
+			},
+			"targets": {
+				"posts": {
+					"xpath": "//*[@id='category-2']/article/ul/li[*]/a/@href",
+					"type": "link"
+				}
+			}
 		},
-		"title": {
-			"xpath": "//*[@id='category-2']/article/ul/li[*]/a/span[2]",
-			"type": "words",
-			"whitelist": [
-				"php",
-				"typescript",
-				"javascript",
-				"angular",
-				"ruby",
-				"java ",
-				"rails",
-				"node",
-				"go",
-				"python",
-				"react",
-				"c",
-				"c++",
-				"c#"
-			]
+		"posts": {
+			"path": {
+				"type": "reference",
+				"value": "programming.posts"
+			},
+			"targets": {
+				"company": {
+					"xpath": "//span[@class='company']/text()",
+					"type": "full_text"
+				},
+				"body": {
+					"xpath": "//div[@class='listing-container']/descendant-or-self::*/text()",
+					"type": "words",
+					"whitelist": [
+						"php",
+						"typescript",
+						"javascript",
+						"angular",
+						"ruby",
+						"java ",
+						"rails",
+						"node",
+						"go",
+						"python",
+						"react",
+						"c",
+						"c++",
+						"c#"
+					]
+				}
+			}
 		}
 	}
 }

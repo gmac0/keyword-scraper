@@ -25,7 +25,7 @@ class PageReader:
         for key, target_data in self.config['targets'].items():
             if not key in results:
                 results[key] = []
-            xpath_results = tree.xpath(target_data['xpath'] + '/text()')
+            xpath_results = tree.xpath(target_data['xpath'])
             results[key] = results[key] + xpath_results
         return results
 
@@ -40,6 +40,12 @@ class PageReader:
         return analyzed
 
     def _analyze_full_text(self, data, key):
+        counts = {}
+        for text in data:
+            counts = self._add_phrase_count(counts, text.lower())
+        return counts
+
+    def _analyze_link(self, data, key):
         counts = {}
         for text in data:
             counts = self._add_phrase_count(counts, text)
