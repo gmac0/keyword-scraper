@@ -1,6 +1,7 @@
 {
 	"host": "weworkremotely.com",
 	"schema": "https",
+	"output": "csv",
 	"pages": {
 		"programming": {
 			"path": {
@@ -22,11 +23,13 @@
 			"targets": {
 				"company": {
 					"xpath": "//span[@class='company']/text()",
-					"type": "full_text"
+					"type": "full_text",
+					"save": true
 				},
 				"body": {
 					"xpath": "//div[@class='listing-container']/descendant-or-self::*/text()",
 					"type": "words",
+					"save": true,
 					"whitelist": [
 						"php",
 						"typescript",
